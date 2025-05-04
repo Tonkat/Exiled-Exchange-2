@@ -44,6 +44,7 @@
         <trade-links v-if="tradeAPI === 'trade'" :get-link="makeTradeLink" />
       </div>
     </div>
+    <calculated-result class="mt-4" :raw-text="item.rawText" />
     <stack-value :filters="itemFilters" :item="item" />
     <div v-if="showSupportLinks" class="mt-auto border border-dashed p-2">
       <div class="mb-1">
@@ -89,6 +90,7 @@ import { ItemRarity, ItemCategory, ParsedItem } from "@/parser";
 import TradeListing from "./trade/TradeListing.vue";
 import TradeBulk from "./trade/TradeBulk.vue";
 import TradeLinks from "./trade/TradeLinks.vue";
+import CalculatedResult from "./CalculatedResult.vue";
 import { apiToSatisfySearch, getTradeEndpoint } from "./trade/common";
 import PriceTrend from "./trends/PriceTrend.vue";
 import FiltersBlock from "./filters/FiltersBlock.vue";
@@ -118,6 +120,7 @@ export default defineComponent({
     TradeListing,
     TradeBulk,
     TradeLinks,
+    CalculatedResult,
     PriceTrend,
     FiltersBlock,
     FilterName,
