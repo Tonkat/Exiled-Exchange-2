@@ -6,7 +6,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch, computed } from "vue";
+import { defineComponent, ref, computed, watch } from "vue";
+import { simplifyItemString } from "../../utils/itemStringUtils";
 
 /**
  * Converts an array of strings with color codes into an HTML string.
@@ -40,7 +41,7 @@ import { defineComponent, ref, watch, computed } from "vue";
     const colorRegex = /\^x([0-9A-Fa-f]{6})/g;
     const resetRegex = /\^7/g;
 
-    const debug = false;
+    const debug = true;
     if (debug == false) {
         lines = lines.slice(lines.findIndex(line => line.includes("Equipping")), -1);
     }
@@ -113,48 +114,11 @@ import { defineComponent, ref, watch, computed } from "vue";
             }
         }
 
-        // Add the processed line to the output, followed by a line break
+        // Add the processed line to the output
         htmlOutput += processedLine + '<br>';
     }
 
     return htmlOutput;
-}
-
-/**
- * Simplifies a string containing item information by removing modifier lines
- * and parenthesized content from subsequent lines.
- *
- * @param inputString The raw string with excess information.
- * @returns The simplified string.
- */
- function simplifyItemString(inputString: string): string {
-    // Split the input string into individual lines
-    const lines = inputString.split('\n');
-    const simplifiedLines: string[] = [];
-    let skipNextLine = false;
-
-    for (let i = 0; i < lines.length; i++) {
-        const currentLine = lines[i];
-
-        // Check if the current line is a modifier line
-        if (currentLine.trim().startsWith('{ ') && currentLine.trim().endsWith('}')) {
-            // If it's a modifier line, skip it and mark the next line for processing
-            skipNextLine = true;
-        } else if (skipNextLine) {
-            // If the previous line was a modifier line, process the current line
-            // Remove content within parentheses and any trailing whitespace after the parentheses
-            // Corrected regex to preserve space before the opening parenthesis
-            const processedLine = currentLine.replace(/\(.*?\)/g, '');
-            simplifiedLines.push(processedLine);
-            skipNextLine = false; // Reset the flag
-        } else {
-            // Keep other lines as they are
-            simplifiedLines.push(currentLine);
-        }
-    }
-
-    // Join the simplified lines back into a single string with line breaks
-    return simplifiedLines.join('\n');
 }
 
 export default defineComponent({
