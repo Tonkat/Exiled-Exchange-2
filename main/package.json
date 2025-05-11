@@ -5,10 +5,11 @@
   "scripts": {
     "dev": "node build/script.mjs",
     "build": "tsc --noEmit && node build/script.mjs --prod",
+    "build-all": "cd ../renderer && npm run build && cd ../main && npm run build && npm run package",
     "package": "electron-builder build",
     "lint": "eslint src",
     "fix": "eslint src --fix",
-    "format": "prettier . --write "
+    "format": "prettier . --write"
   },
   "author": {
     "name": "Garrett Parker"

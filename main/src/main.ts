@@ -16,6 +16,7 @@ import { GameLogWatcher } from "./host-files/GameLogWatcher";
 import { HttpProxy } from "./proxy";
 import { installExtension, VUEJS_DEVTOOLS } from "electron-devtools-installer";
 import { FilterGenerator } from "./filter-generator/FilterGenerator";
+import { setupIpcHandlers } from "./ipc-handlers";
 
 if (!app.requestSingleInstanceLock()) {
   app.exit();
@@ -26,6 +27,10 @@ if (process.platform !== "darwin") {
 }
 app.enableSandbox();
 let tray: AppTray;
+
+// In both app.on("ready") handlers:
+// Set up IPC handlers for renderer-to-main communication
+setupIpcHandlers();
 
 // Ensure accessibility permissions on MacOS.
 if (process.platform === "darwin") {

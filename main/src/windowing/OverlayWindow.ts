@@ -39,9 +39,17 @@ export class OverlayWindow {
       width: 800,
       height: 600,
       webPreferences: {
+        // Keep this enabled to allow connections to localhost
+        webSecurity: false, 
+        
         allowRunningInsecureContent: false,
         webviewTag: true,
         spellcheck: false,
+        
+        nodeIntegration: false,
+        contextIsolation: true,
+        
+        preload: path.join(__dirname, 'preload.js'),
       },
     });
 

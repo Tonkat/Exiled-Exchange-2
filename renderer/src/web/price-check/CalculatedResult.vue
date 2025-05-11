@@ -41,10 +41,8 @@ import { simplifyItemString } from "../../utils/itemStringUtils";
     const colorRegex = /\^x([0-9A-Fa-f]{6})/g;
     const resetRegex = /\^7/g;
 
-    const debug = true;
-    if (debug == false) {
-        lines = lines.slice(lines.findIndex(line => line.includes("Equipping")), -1);
-    }
+    // Comment this line if you want to see the full output
+    lines = lines.slice(lines.findIndex(line => line.includes("Equipping")), -1);
 
     for (const line of lines) {
         let processedLine = '';
@@ -133,12 +131,52 @@ export default defineComponent({
     const result = ref<string>("Loading...");
     const simplifiedItemString = computed(() => simplifyItemString(props.rawText));
 
-    const fetchResult = () => {
-      const encoded = encodeURIComponent(simplifiedItemString.value);
-      fetch(`http://localhost:49090/calculate_item?item=${encoded}`)
+    // Fallback function to try direct HTTP requests if IPC fails
+    const fallbackToDirectFetch = (encoded: string) => {
+      console.log("Falling back to direct HTTP requests");
+      
+      // Try 127.0.0.1 first
+      fetch(`http://127.0.0.1:49090/calculate_item?item=${encoded}`)
         .then((res) => res.text())
-        .then((text) => (result.value = convertToHtmlWithColors(text)))
-        .catch((err) => (result.value = `Error: ${err.message}`));
+        .then((text: string) => {
+          result.value = convertToHtmlWithColors(text);
+        })
+        .catch((err: Error) => {
+          console.error("Error with 127.0.0.1:", err);
+          
+          // Then try localhost
+          fetch(`http://localhost:49090/calculate_item?item=${encoded}`)
+            .then((res) => res.text())
+            .then((text: string) => {
+              result.value = convertToHtmlWithColors(text);
+            })
+            .catch((innerErr: Error) => {
+              console.error("Error with localhost:", innerErr);
+              result.value = `Error: Could not connect to server. Please make sure the server is running and accessible.`;
+            });
+        });
+    };
+
+    const fetchResult = () => {
+        const encoded = encodeURIComponent(simplifiedItemString.value);
+        
+        // Check if we're running in Electron with IPC available
+        // @ts-ignore - Electron API is available at runtime but not during type checking
+        if (window.electron && window.electron.ipcRenderer) {
+            console.log("Using Electron IPC to fetch data");
+            // @ts-ignore - Electron API is available at runtime but not during type checking
+            window.electron.ipcRenderer.invoke('fetch-calculate-item', encoded)
+            .then((text: string) => {
+                result.value = convertToHtmlWithColors(text);
+            })
+            .catch((err: Error) => {
+                console.error("IPC error:", err);
+                fallbackToDirectFetch(encoded);
+            });
+        } else {
+            // Fallback to direct fetch
+            fallbackToDirectFetch(encoded);
+        }
     };
 
     watch(() => props.rawText, fetchResult, { immediate: true });
@@ -148,6 +186,7 @@ export default defineComponent({
     };
   },
 });
+
 </script>
 
 <style scoped>
