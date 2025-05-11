@@ -33,7 +33,7 @@ import { defineComponent, ref, watch, computed } from "vue";
     } catch (error) {
         // Handle JSON parsing errors
         console.error("Error parsing JSON string:", error);
-        return `Error parsing input string: ${error.message}`;
+        return `Error parsing input string: ${(error as Error).message}`;
     }
 
     let htmlOutput = '';
