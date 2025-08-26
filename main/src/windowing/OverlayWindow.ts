@@ -38,20 +38,24 @@ export class OverlayWindow {
       ...OVERLAY_WINDOW_OPTS,
       width: 800,
       height: 600,
+      focusable: false,  // Prevent the window from gaining focus
+      skipTaskbar: true,  // Don't show in taskbar
+      frame: false,       // Remove window frame
+      transparent: true,  // Allow for transparency
+      alwaysOnTop: true,  // Keep on top of other windows
       webPreferences: {
         // Keep this enabled to allow connections to localhost
         webSecurity: false, 
-        
         allowRunningInsecureContent: false,
         webviewTag: true,
         spellcheck: false,
-        
         nodeIntegration: false,
         contextIsolation: true,
-        
         preload: path.join(__dirname, 'preload.js'),
       },
     });
+
+    this.window.setIgnoreMouseEvents(true, { forward: true });
 
     this.window.setMenu(
       Menu.buildFromTemplate([

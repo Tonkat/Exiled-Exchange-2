@@ -1,6 +1,8 @@
 import child_process from 'child_process'
 import electron from 'electron'
 import esbuild from 'esbuild'
+import { copyFileSync, existsSync, mkdirSync } from 'fs'
+import path from 'path'
 
 const isDev = !process.argv.includes('--prod')
 
@@ -18,37 +20,60 @@ const electronRunner = (() => {
   }
 })()
 
-const visionBuild = await esbuild.build({
-  entryPoints: ['src/vision/link-worker.ts'],
-  bundle: true,
-  platform: 'node',
-  outfile: 'dist/vision.js'
-})
-
-const mainContext = await esbuild.context({
-  entryPoints: ['src/main.ts'],
-  bundle: true,
-  minify: !isDev,
-  platform: 'node',
-  external: ['electron', 'uiohook-napi', 'electron-overlay-window'],
-  outfile: 'dist/main.js',
-  define: {
-    'process.env.STATIC': (isDev) ? '"../build/icons"' : '"."',
-    'process.env.VITE_DEV_SERVER_URL': (isDev) ? '"http://localhost:5173"' : 'null'
-  },
-  plugins: (isDev) ? [{
-    name: 'electron-runner',
-    setup (build) {
-      build.onEnd((result) => {
-        if (!result.errors.length) electronRunner.restart()
-      })
-    }
-  }] : []
-})
-
-if (isDev) {
-  await mainContext.watch()
-} else {
-  await mainContext.rebuild()
-  mainContext.dispose()
+function copyPreloadScript() {
+  const srcPath = path.join(process.cwd(), 'src', 'preload.js');
+  const destDir = path.join(process.cwd(), 'dist');
+  const destPath = path.join(destDir, 'preload.js');
+  
+  if (!existsSync(destDir)) {
+    mkdirSync(destDir, { recursive: true });
+  }
+  
+  if (existsSync(srcPath)) {
+    copyFileSync(srcPath, destPath);
+    console.log('Copied preload.js to dist directory');
+  } else {
+    console.warn('preload.js not found in src directory');
+  }
 }
+
+async function build() {
+  const visionBuild = await esbuild.build({
+    entryPoints: ['src/vision/link-worker.ts'],
+    bundle: true,
+    platform: 'node',
+    outfile: 'dist/vision.js'
+  })
+
+  const mainContext = await esbuild.context({
+    entryPoints: ['src/main.ts'],
+    bundle: true,
+    minify: !isDev,
+    platform: 'node',
+    external: ['electron', 'uiohook-napi', 'electron-overlay-window'],
+    outfile: 'dist/main.js',
+    define: {
+      'process.env.STATIC': (isDev) ? '"../build/icons"' : '"."',
+      'process.env.VITE_DEV_SERVER_URL': (isDev) ? '"http://localhost:5173"' : 'null'
+    },
+    plugins: (isDev) ? [{
+      name: 'electron-runner',
+      setup (build) {
+        build.onEnd((result) => {
+          if (!result.errors.length) electronRunner.restart()
+        })
+      }
+    }] : []
+  })
+
+  if (isDev) {
+    await mainContext.watch()
+  } else {
+    await mainContext.rebuild()
+    mainContext.dispose()
+  }
+
+  copyPreloadScript()
+}
+
+build()
