@@ -98,12 +98,6 @@ if (process.platform === "darwin") {
             gameConfig,
             eventPipe,
           );
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const filterGenerator = new FilterGenerator(
-            logger,
-            gameConfig,
-            eventPipe,
-          );
           eventPipe.onEventAnyClient(
             "CLIENT->MAIN::update-host-config",
             (cfg) => {
@@ -166,12 +160,6 @@ if (process.platform === "darwin") {
           logger,
           overlay,
           poeWindow,
-          gameConfig,
-          eventPipe,
-        );
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const filterGenerator = new FilterGenerator(
-          logger,
           gameConfig,
           eventPipe,
         );
